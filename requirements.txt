@@ -11,3 +11,4 @@ streamlit
 PyPDF2
 python-doc
 python-docx
+python-dotenv
