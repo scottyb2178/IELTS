@@ -41,6 +41,12 @@ OPENAI_API_KEY = "sk-proj-xgcvhUKYaqE9qGoCKUGnNs1hFs2JV3W3qLfXXwIIWL6uCh24THVTwu
 
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
+# Ensure spaCy model is downloaded in cloud environments
+if not os.path.exists(spacy.util.get_package_path("en_core_web_sm")):
+    import subprocess
+    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
+    
+
 # Load spaCy model
 nlp = spacy.load("en_core_web_sm")
 
