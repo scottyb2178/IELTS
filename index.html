@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Writing Test</title>
+</head>
+<body>
+    <h1>IELTS Writing Test</h1>
+    <h2>Question:</h2>
+    <p>{{ question }}</p>
+
+    <form method="POST" enctype="multipart/form-data">
+        <label for="essay_text">Type your response:</label><br>
+        <textarea name="essay_text" rows="10" cols="50"></textarea><br><br>
+
+        <label for="file">Or upload a file (PDF, DOCX, TXT):</label><br>
+        <input type="file" name="file"><br><br>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    {% if result %}
+        <h2>Assessment Result:</h2>
+        <p><strong>Word Count:</strong> {{ result.word_count }}</p>
+        <p><strong>Sentence Count:</strong> {{ result.sentence_count }}</p>
+        <p><strong>Lexical Diversity:</strong> {{ result.lexical_diversity }}</p>
+        <p><strong>Grammar Errors:</strong> {{ result.grammar_errors }}</p>
+        <p><strong>Estimated Band Score:</strong> {{ result.estimated_band_score }}</p>
+        <p><strong>Feedback:</strong> {{ result.task_relevance_feedback }}</p>
+    {% endif %}
+</body>
+</html>

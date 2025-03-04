@@ -1,0 +1,12 @@
+spacy
+openai
+pandas
+nltk
+scikit-learn
+transformers
+torch
+pytesseract
+pdf2image
+streamlit
+PyPDF2
+python-doc
