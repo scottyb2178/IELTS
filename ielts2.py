@@ -43,15 +43,15 @@ OPENAI_API_KEY = "sk-proj-xgcvhUKYaqE9qGoCKUGnNs1hFs2JV3W3qLfXXwIIWL6uCh24THVTwu
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 # Ensure spaCy model is installed
-def ensure_spacy_model():
-    try:
-        spacy.load("en_core_web_sm")
-    except OSError:
-        print("Downloading spaCy model...")
-        subprocess.run([sys.executable, "-m", "spacy", "download", "en_core_web_sm"], check=True)
-        spacy.load("en_core_web_sm")  # Reload after downloading
+#def ensure_spacy_model():
+#    try:
+#        spacy.load("en_core_web_sm")
+#    except OSError:
+#        print("Downloading spaCy model...")
+#        subprocess.run([sys.executable, "-m", "spacy", "download", "en_core_web_sm"], check=True)
+#        spacy.load("en_core_web_sm")  # Reload after downloading
 
-ensure_spacy_model()
+#ensure_spacy_model()
     
 
 # Load spaCy model
