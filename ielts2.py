@@ -32,6 +32,7 @@ import os
 import subprocess
 import sys
 from textblob import TextBlob
+from textblob import Word
 import requests
 import nltk
 
@@ -49,14 +50,17 @@ os.makedirs(NLTK_DATA_PATH, exist_ok=True)
 # Set the custom directory for NLTK data
 nltk.data.path.append(NLTK_DATA_PATH)
 
+# Manually set the environment variable for TextBlob corpora
+os.environ['NLTK_DATA'] = NLTK_DATA_PATH
+
 # Download required NLTK/TextBlob corpora
 nltk.download('punkt', download_dir=NLTK_DATA_PATH)
 nltk.download('averaged_perceptron_tagger', download_dir=NLTK_DATA_PATH)
 nltk.download('wordnet', download_dir=NLTK_DATA_PATH)
 nltk.download('brown', download_dir=NLTK_DATA_PATH)  # Required for TextBlob
 
-# Manually set the environment variable for TextBlob corpora
-os.environ['NLTK_DATA'] = NLTK_DATA_PATH
+# Ensure TextBlob corpora are loaded correctly
+Word("hello").synsets  # Forces TextBlob to check its corpora
 
 # Load spaCy model
 nlp = spacy.load("en_core_web_sm")
