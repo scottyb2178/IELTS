@@ -140,7 +140,7 @@ def analyze_essay(text, prompt):
         "feedback": feedback_text  # Full feedback from OpenAI
     }
 
-tool = language_tool_python.LanguageTool('en-AU')
+tool = language_tool_python.LanguageTool('en-GB')
 
 # Streamlit UI
 st.title("IELTS Writing Test")
