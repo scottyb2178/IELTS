@@ -52,10 +52,10 @@ nltk.data.path.append(NLTK_DATA_PATH)
 os.environ['NLTK_DATA'] = NLTK_DATA_PATH  # Manually set env variable
 
 # Download required NLTK corpora
-nltk.download('punkt', download_dir=NLTK_DATA_PATH)  # Tokenization
-nltk.download('wordnet', download_dir=NLTK_DATA_PATH)  # Lemmatization
-nltk.download('averaged_perceptron_tagger', download_dir=NLTK_DATA_PATH)  # POS Tagging
-nltk.download('brown', download_dir=NLTK_DATA_PATH)  # Required for TextBlob
+#nltk.download('punkt', download_dir=NLTK_DATA_PATH)  # Tokenization
+#nltk.download('wordnet', download_dir=NLTK_DATA_PATH)  # Lemmatization
+#nltk.download('averaged_perceptron_tagger', download_dir=NLTK_DATA_PATH)  # POS Tagging
+#nltk.download('brown', download_dir=NLTK_DATA_PATH)  # Required for TextBlob
 
 # Force load the corpora before using TextBlob
 try:
