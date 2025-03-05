@@ -31,6 +31,8 @@ from dotenv import load_dotenv
 import os
 import subprocess
 import sys
+from textblob import TextBlob
+import language_tool_python
 
 # In[4]:
 
@@ -39,17 +41,6 @@ openai.api_key = OPENAI_API_KEY
 
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
-# Ensure spaCy model is installed
-#def ensure_spacy_model():
-#    try:
-#        spacy.load("en_core_web_sm")
-#    except OSError:
-#        print("Downloading spaCy model...")
-#        subprocess.run([sys.executable, "-m", "spacy", "download", "en_core_web_sm"], check=True)
-#        spacy.load("en_core_web_sm")  # Reload after downloading
-
-#ensure_spacy_model()
-    
 
 # Load spaCy model
 nlp = spacy.load("en_core_web_sm")
@@ -149,6 +140,7 @@ def analyze_essay(text, prompt):
         "feedback": feedback_text  # Full feedback from OpenAI
     }
 
+tool = language_tool_python.LanguageTool('en-AU')
 
 # Streamlit UI
 st.title("IELTS Writing Test")
@@ -162,8 +154,30 @@ if 'ielts_question' in st.session_state:
     st.write(st.session_state['ielts_question'])
     
     # Input options
-    user_input = st.text_area("Type your response:")
+    user_input = st.text_area("Type your response:", height=300, key="user_input")
     uploaded_file = st.file_uploader("Or upload a file (PDF, DOCX, TXT)", type=["pdf", "txt", "docx"])
+
+    if user_input:
+        words = user_input.split()
+        word_count = len(words)
+        st.write(f"Word Count: **{word_count}**")
+
+        # Spell and grammar check
+        blob = TextBlob(user_input)
+        spelling_suggestions = [word.correct() for word in blob.words if word.spellcheck()[0][1] < 1]
+
+        # Grammar checking
+        grammar_corrections = tool.check(user_input)
+        
+        if spelling_suggestions:
+            st.write("### Spelling Suggestions:")
+            st.write(", ".join(spelling_suggestions))
+
+        if grammar_corrections:
+            st.write("### Grammar Issues:")
+            for correction in grammar_corrections:
+                st.write(f"**{correction.context}** → {correction.replacements}")
+
     
     if st.button("Submit Response"):
         essay_text = user_input if user_input.strip() else None
