@@ -58,11 +58,11 @@ os.environ['NLTK_DATA'] = NLTK_DATA_PATH  # Manually set env variable
 #nltk.download('brown', download_dir=NLTK_DATA_PATH)  # Required for TextBlob
 
 # Force load the corpora before using TextBlob
-try:
-    Word("hello").synsets  # Forces TextBlob to check its corpora
-    _ = Spelling()  # Ensures spelling corpus is loaded
-except Exception as e:
-    st.error(f"TextBlob corpus loading error: {str(e)}")
+#try:
+#    Word("hello").synsets  # Forces TextBlob to check its corpora
+#    _ = Spelling()  # Ensures spelling corpus is loaded
+#except Exception as e:
+#    st.error(f"TextBlob corpus loading error: {str(e)}")
 # Load spaCy model
 nlp = spacy.load("en_core_web_sm")
 
