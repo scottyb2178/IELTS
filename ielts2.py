@@ -43,25 +43,26 @@ openai.api_key = OPENAI_API_KEY
 
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
-# Define a writable directory for NLTK/TextBlob data
+# Define a writable directory for NLTK data
 NLTK_DATA_PATH = os.path.join(os.getcwd(), "nltk_data")
 os.makedirs(NLTK_DATA_PATH, exist_ok=True)
 
 # Set the custom directory for NLTK data
 nltk.data.path.append(NLTK_DATA_PATH)
+os.environ['NLTK_DATA'] = NLTK_DATA_PATH  # Manually set env variable
 
-# Manually set the environment variable for TextBlob corpora
-os.environ['NLTK_DATA'] = NLTK_DATA_PATH
-
-# Download required NLTK/TextBlob corpora
-nltk.download('punkt', download_dir=NLTK_DATA_PATH)
-nltk.download('averaged_perceptron_tagger', download_dir=NLTK_DATA_PATH)
-nltk.download('wordnet', download_dir=NLTK_DATA_PATH)
+# Download required NLTK corpora
+nltk.download('punkt', download_dir=NLTK_DATA_PATH)  # Tokenization
+nltk.download('wordnet', download_dir=NLTK_DATA_PATH)  # Lemmatization
+nltk.download('averaged_perceptron_tagger', download_dir=NLTK_DATA_PATH)  # POS Tagging
 nltk.download('brown', download_dir=NLTK_DATA_PATH)  # Required for TextBlob
 
-# Ensure TextBlob corpora are loaded correctly
-Word("hello").synsets  # Forces TextBlob to check its corpora
-
+# Force load the corpora before using TextBlob
+try:
+    Word("hello").synsets  # Forces TextBlob to check its corpora
+    _ = Spelling()  # Ensures spelling corpus is loaded
+except Exception as e:
+    st.error(f"TextBlob corpus loading error: {str(e)}")
 # Load spaCy model
 nlp = spacy.load("en_core_web_sm")
 
