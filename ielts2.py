@@ -165,16 +165,20 @@ if 'ielts_question' in st.session_state:
     uploaded_file = st.file_uploader("Or upload a file (PDF, DOCX, TXT)", type=["pdf", "txt", "docx"])
 
     # Live word count and spell/grammar check
+    # Live word count and spell/grammar check
     if user_input:
         words = user_input.split()
         word_count = len(words)
         st.write(f"Word Count: **{word_count}**")
 
-        # Spell checking with TextBlob
+        # Spell checking with TextBlob (Fixed)
         blob = TextBlob(user_input)
-        spelling_suggestions = [word.correct() for word in blob.words if word.spellcheck()[0][1] < 1]
+        spelling_suggestions = []
+        for word in blob.words:
+            if word.spellcheck()[0][1] < 1:  # If confidence is low, suggest correction
+                spelling_suggestions.append(word.correct())
 
-        # Grammar checking using LanguageTool API
+        # Grammar checking using the API
         grammar_corrections = check_grammar(user_input)
         
         if spelling_suggestions:
@@ -218,4 +222,4 @@ if 'ielts_question' in st.session_state:
 
 if __name__ == "__main__":
     # Start your app (Streamlit or another framework)
-    st.write("App is running! Use `streamlit run your_script.py`")    
+    st.write("App is running! Use `streamlit run your_script.py`")
