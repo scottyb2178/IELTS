@@ -189,27 +189,27 @@ if 'ielts_question' in st.session_state:
     # Live word count and spell/grammar check
     if user_input:
         words = user_input.split()
-        word_count = len(words)
-        st.write(f"Word Count: **{word_count}**")
+        word_count = len(user_input.split())
+        st.write(f"**Word Count:** {word_count}")
 
         # Spell checking with TextBlob (Fixed)
-        blob = TextBlob(user_input)
-        spelling_suggestions = []
-        for word in blob.words:
-            if word.spellcheck()[0][1] < 1:  # If confidence is low, suggest correction
-                spelling_suggestions.append(word.correct())
+        #blob = TextBlob(user_input)
+        #spelling_suggestions = []
+        #for word in blob.words:
+        #    if word.spellcheck()[0][1] < 1:  # If confidence is low, suggest correction
+        #        spelling_suggestions.append(word.correct())
 
         # Grammar checking using the API
-        grammar_corrections = check_grammar(user_input)
-        
-        if spelling_suggestions:
-            st.write("### Spelling Suggestions:")
-            st.write(", ".join(spelling_suggestions))
+        #grammar_corrections = check_grammar(user_input)
+        #
+        #if spelling_suggestions:
+        #    st.write("### Spelling Suggestions:")
+        #    st.write(", ".join(spelling_suggestions))
 
-        if grammar_corrections:
-            st.write("### Grammar Issues:")
-            for correction in grammar_corrections:
-                st.write(f"**{correction['context']}** → {correction['replacements']}")
+        #if grammar_corrections:
+        #    st.write("### Grammar Issues:")
+        #    for correction in grammar_corrections:
+        #        st.write(f"**{correction['context']}** → {correction['replacements']}")
 
     if st.button("Submit Response"):
         essay_text = user_input if user_input.strip() else None
