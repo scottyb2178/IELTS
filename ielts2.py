@@ -83,44 +83,72 @@ def extract_text_from_file(uploaded_file):
 def analyze_essay(text, prompt):
     """Performs NLP analysis and evaluates relevance to the question using OpenAI GPT."""
     doc = nlp(text)
-    
+
     # Word count
     word_count = len([token.text for token in doc if token.is_alpha])
-    
+
     # Sentence count
     sentence_count = len(list(doc.sents))
-    
+
     # Lexical diversity
     unique_words = set([token.text.lower() for token in doc if token.is_alpha])
     lexical_diversity = len(unique_words) / word_count if word_count > 0 else 0
-    
+
     # Grammar mistakes (basic heuristic: count of dependency errors)
     grammar_errors = sum(1 for token in doc if token.dep_ == "punct")
-    
+
     # Sentence complexity (average words per sentence)
     avg_sentence_length = word_count / sentence_count if sentence_count > 0 else 0
-    
+
     # OpenAI GPT relevance check
     messages = [
-        {"role": "system", "content": "You are an IELTS examiner. Assess the relevance of the given essay to the prompt."},
-        {"role": "user", "content": f"Prompt: {prompt}\nEssay: {text}\nHow well does this essay address the question? Provide a score from 0 to 9 and feedback."}
+        {"role": "system", "content": "You are an IELTS examiner. Assess the given essay based on the IELTS criteria."},
+        {"role": "user", "content": f"Prompt: {prompt}\nEssay: {text}\n\nGive band scores for Task Achievement, Coherence, Lexical Resource, Grammar, and an Overall Band Score. Then provide detailed feedback on how to improve."}
     ]
-    
+
     response = client.chat.completions.create(
         model="gpt-4",
         messages=messages
     )
-    
-    relevance_feedback = response.choices[0].message.content
-    
+
+    feedback_text = response.choices[0].message.content
+
+    # Extracting scores from feedback using regex
+    scores = {
+        "Task Achievement": None,
+        "Coherence": None,
+        "Lexical Resource": None,
+        "Grammar": None,
+        "Overall Band Score": None
+    }
+
+    patterns = {
+        "Task Achievement": r"Task Achievement.*?(\d(?:\.\d)?)",
+        "Coherence": r"Coherence.*?(\d(?:\.\d)?)",
+        "Lexical Resource": r"Lexical Resource.*?(\d(?:\.\d)?)",
+        "Grammar": r"Grammar.*?(\d(?:\.\d)?)",
+        "Overall Band Score": r"Overall Band Score.*?(\d(?:\.\d)?)"
+    }
+
+    for category, pattern in patterns.items():
+        match = re.search(pattern, feedback_text, re.IGNORECASE)
+        if match:
+            scores[category] = float(match.group(1))
+
     return {
         "word_count": word_count,
         "sentence_count": sentence_count,
         "lexical_diversity": round(lexical_diversity, 2),
         "grammar_errors": grammar_errors,
         "avg_sentence_length": round(avg_sentence_length, 2),
-        "task_relevance_feedback": relevance_feedback
+        "Task Achievement": scores["Task Achievement"],
+        "Coherence": scores["Coherence"],
+        "Lexical Resource": scores["Lexical Resource"],
+        "Grammar": scores["Grammar"],
+        "Overall Band Score": scores["Overall Band Score"],
+        "feedback": feedback_text  # Full feedback from OpenAI
     }
+
 
 # Streamlit UI
 st.title("IELTS Writing Test")
