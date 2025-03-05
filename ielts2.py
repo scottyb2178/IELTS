@@ -34,11 +34,7 @@ import sys
 
 # In[4]:
 
-load_dotenv()  # Load environment variables from .env file
-# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # Get API key
-# OpenAI API key (Replace with your actual key)
-# OPENAI_API_KEY = 
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
