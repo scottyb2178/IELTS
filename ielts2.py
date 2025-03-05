@@ -32,7 +32,7 @@ import os
 import subprocess
 import sys
 from textblob import TextBlob
-import languagetool
+import requests
 
 # In[4]:
 
@@ -140,7 +140,14 @@ def analyze_essay(text, prompt):
         "feedback": feedback_text  # Full feedback from OpenAI
     }
 
-tool = language_tool_python.LanguageTool('en-GB')
+def check_grammar(text):
+    url = "https://api.languagetool.org/v2/check"
+    data = {
+        "text": text,
+        "language": "en-AU"  # Change to 'en-GB' if needed
+    }
+    response = requests.post(url, data=data)
+    return response.json().get("matches", [])
 
 # Streamlit UI
 st.title("IELTS Writing Test")
@@ -168,7 +175,7 @@ if 'ielts_question' in st.session_state:
         spelling_suggestions = [word.correct() for word in blob.words if word.spellcheck()[0][1] < 1]
 
         # Grammar checking using LanguageTool API
-        grammar_corrections = tool.check(user_input)
+        grammar_corrections = check_grammar(user_input)
         
         if spelling_suggestions:
             st.write("### Spelling Suggestions:")
@@ -177,7 +184,7 @@ if 'ielts_question' in st.session_state:
         if grammar_corrections:
             st.write("### Grammar Issues:")
             for correction in grammar_corrections:
-                st.write(f"**{correction.context}** → {correction.replacements}")
+                st.write(f"**{correction['context']}** → {correction['replacements']}")
 
     if st.button("Submit Response"):
         essay_text = user_input if user_input.strip() else None
