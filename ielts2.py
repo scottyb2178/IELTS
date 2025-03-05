@@ -42,9 +42,26 @@ openai.api_key = OPENAI_API_KEY
 
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
-#Load NLTK corpus
-nltk.download('punkt')
-nltk.download('wordnet')
+# Define a writable directory for NLTK/TextBlob data
+NLTK_DATA_PATH = os.path.join(os.getcwd(), "nltk_data")
+os.makedirs(NLTK_DATA_PATH, exist_ok=True)
+
+# Set the custom directory for NLTK data
+nltk.data.path.append(NLTK_DATA_PATH)
+
+# Download required NLTK/TextBlob corpora
+nltk.download('punkt', download_dir=NLTK_DATA_PATH)
+nltk.download('averaged_perceptron_tagger', download_dir=NLTK_DATA_PATH)
+nltk.download('wordnet', download_dir=NLTK_DATA_PATH)
+nltk.download('brown', download_dir=NLTK_DATA_PATH)  # Required for TextBlob
+
+# Manually set the environment variable for TextBlob corpora
+os.environ['NLTK_DATA'] = NLTK_DATA_PATH
+
+import textblob.download_corpora
+
+# Ensure TextBlob's corpora are available
+textblob.download_corpora.download_corpora()
 
 # Load spaCy model
 nlp = spacy.load("en_core_web_sm")
