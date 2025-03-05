@@ -33,6 +33,7 @@ import subprocess
 import sys
 from textblob import TextBlob
 import requests
+import nltk
 
 # In[4]:
 
@@ -41,6 +42,9 @@ openai.api_key = OPENAI_API_KEY
 
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
+#Load NLTK corpus
+nltk.download('punkt')
+nltk.download('wordnet')
 
 # Load spaCy model
 nlp = spacy.load("en_core_web_sm")
