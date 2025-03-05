@@ -171,29 +171,29 @@ if 'ielts_question' in st.session_state:
             essay_text = extract_text_from_file(uploaded_file)
         
         if essay_text:
-    result = analyze_essay(essay_text, st.session_state['ielts_question'])
+            result = analyze_essay(essay_text, st.session_state['ielts_question'])
     
-    st.subheader("Assessment Result:")
-    st.write(f"**Word Count:** {result['word_count']}")
-    st.write(f"**Sentence Count:** {result['sentence_count']}")
-    st.write(f"**Lexical Diversity:** {result['lexical_diversity']}")
-    st.write(f"**Grammar Errors:** {result['grammar_errors']}")
-    st.write(f"**Average Sentence Length:** {result['avg_sentence_length']} words")
+            st.subheader("Assessment Result:")
+            st.write(f"**Word Count:** {result['word_count']}")
+            st.write(f"**Sentence Count:** {result['sentence_count']}")
+            st.write(f"**Lexical Diversity:** {result['lexical_diversity']}")
+            st.write(f"**Grammar Errors:** {result['grammar_errors']}")
+            st.write(f"**Average Sentence Length:** {result['avg_sentence_length']} words")
+        
+            # Display individual band scores
+            st.subheader("Band Scores:")
+            st.write(f"**Task Achievement:** {result['Task Achievement']}")
+            st.write(f"**Coherence:** {result['Coherence']}")
+            st.write(f"**Lexical Resource:** {result['Lexical Resource']}")
+            st.write(f"**Grammar:** {result['Grammar']}")
+            st.write(f"**Overall Band Score:** {result['Overall Band Score']}")
 
-    # Display individual band scores
-    st.subheader("Band Scores:")
-    st.write(f"**Task Achievement:** {result['Task Achievement']}")
-    st.write(f"**Coherence:** {result['Coherence']}")
-    st.write(f"**Lexical Resource:** {result['Lexical Resource']}")
-    st.write(f"**Grammar:** {result['Grammar']}")
-    st.write(f"**Overall Band Score:** {result['Overall Band Score']}")
-
-    # Display detailed feedback
-    st.subheader("Feedback & Improvements:")
-    st.write(result["feedback"])  # Full feedback from GPT
+            # Display detailed feedback
+            st.subheader("Feedback & Improvements:")
+            st.write(result["feedback"])  # Full feedback from GPT
     
-else:
-    st.warning("No valid response provided. Please type your response or upload a file.")
+    else:
+        st.warning("No valid response provided. Please type your response or upload a file.")
 
 if __name__ == "__main__":
     # Start your app (Streamlit or another framework)
