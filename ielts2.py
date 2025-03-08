@@ -298,11 +298,12 @@ if st.button("Submit Response"):
 
         # Display band scores
         st.subheader("Band Scores:")
-        st.write(f"**Task Achievement:** {feedback['Task Achievement']}")
-        st.write(f"**Coherence:** {feedback['Coherence']}")
-        st.write(f"**Lexical Resource:** {feedback['Lexical Resource']}")
-        st.write(f"**Grammar:** {feedback['Grammar']}")
-        st.write(f"**Overall Band Score:** {feedback['Overall Band Score']}")
+        # Instead of feedback['Task Achievement'], use feedback.get() to avoid KeyError
+        st.write(f"**Task Achievement:** {feedback.get('Task Achievement', 'Not Provided')}")
+        st.write(f"**Coherence:** {feedback.get('Coherence', 'Not Provided')}")
+        st.write(f"**Lexical Resource:** {feedback.get('Lexical Resource', 'Not Provided')}")
+        st.write(f"**Grammar:** {feedback.get('Grammar', 'Not Provided')}")
+        st.write(f"**Overall Band Score:** {feedback.get('Overall Band Score', 'Not Provided')}")
 
         # Display detailed feedback
         st.subheader("Feedback & Improvements:")
