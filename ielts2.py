@@ -164,7 +164,7 @@ def analyze_essay(text, prompt):
     ]
     
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="ft:gpt-4o-2024-08-06:personal::B8gProGu",
         messages=messages
     )
 
