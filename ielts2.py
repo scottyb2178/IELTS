@@ -44,12 +44,12 @@ openai.api_key = OPENAI_API_KEY
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 # Define a writable directory for NLTK data
-NLTK_DATA_PATH = os.path.join(os.getcwd(), "nltk_data")
-os.makedirs(NLTK_DATA_PATH, exist_ok=True)
+#NLTK_DATA_PATH = os.path.join(os.getcwd(), "nltk_data")
+#os.makedirs(NLTK_DATA_PATH, exist_ok=True)
 
 # Set the custom directory for NLTK data
-nltk.data.path.append(NLTK_DATA_PATH)
-os.environ['NLTK_DATA'] = NLTK_DATA_PATH  # Manually set env variable
+#nltk.data.path.append(NLTK_DATA_PATH)
+#os.environ['NLTK_DATA'] = NLTK_DATA_PATH  # Manually set env variable
 
 # Download required NLTK corpora
 #nltk.download('punkt', download_dir=NLTK_DATA_PATH)  # Tokenization
@@ -65,6 +65,46 @@ os.environ['NLTK_DATA'] = NLTK_DATA_PATH  # Manually set env variable
 #    st.error(f"TextBlob corpus loading error: {str(e)}")
 # Load spaCy model
 nlp = spacy.load("en_core_web_sm")
+
+IELTS_BAND_DESCRIPTORS = """
+### IELTS Writing Band Descriptors (Task 2) - Official Criteria
+
+#### **Task Achievement**
+- **Band 9**: Fully addresses all parts of the task, presents a well-developed position with fully extended and well-supported ideas.
+- **Band 8**: Covers all task requirements sufficiently, presents a clear and well-developed position.
+- **Band 7**: Addresses all parts of the task, though some ideas may lack full support or development.
+- **Band 6**: Addresses the task, but some points may be underdeveloped or missing.
+- **Band 5**: Generally addresses the task but lacks sufficient development.
+- **Band 4 or below**: Does not fully address the task or is off-topic.
+
+#### **Coherence & Cohesion**
+- **Band 9**: Logical sequencing, seamless flow, and skillful paragraphing.
+- **Band 8**: Well-organized response with logical progression and good paragraphing.
+- **Band 7**: Clear progression, appropriate paragraphing but occasional lapses.
+- **Band 6**: Ideas are generally arranged logically but may have some cohesion issues.
+- **Band 5**: Lacks coherence; linking devices may be inaccurate or overused.
+- **Band 4 or below**: Disjointed ideas with weak organization.
+
+#### **Lexical Resource**
+- **Band 9**: Wide, precise, and sophisticated vocabulary, with natural collocations.
+- **Band 8**: A wide range of vocabulary with minor occasional inaccuracies.
+- **Band 7**: Uses a good range of vocabulary but with occasional repetition or inappropriate word choice.
+- **Band 6**: Vocabulary is adequate but lacks flexibility.
+- **Band 5**: Limited vocabulary, frequent repetition, and basic expressions.
+- **Band 4 or below**: Very basic vocabulary with frequent errors that impede communication.
+
+#### **Grammatical Range & Accuracy**
+- **Band 9**: A wide range of structures, complex sentences are used naturally.
+- **Band 8**: A good mix of complex and simple structures, minor errors may occur.
+- **Band 7**: Uses a variety of sentence forms, but some errors remain.
+- **Band 6**: Uses some complex structures but errors may persist.
+- **Band 5**: Limited range of structures, frequent grammar mistakes.
+- **Band 4 or below**: Frequent errors affecting communication.
+
+Use this rubric to score an IELTS writing response based on the essay below.
+"""
+
+
 
 def generate_ielts_question():
     """Generate an IELTS-style writing question using GPT-4."""
@@ -106,18 +146,23 @@ def analyze_essay(text, prompt):
     unique_words = set([token.text.lower() for token in doc if token.is_alpha])
     lexical_diversity = len(unique_words) / word_count if word_count > 0 else 0
 
-    # Grammar mistakes (basic heuristic: count of dependency errors)
-    grammar_errors = sum(1 for token in doc if token.dep_ == "punct")
+    # Cohesion markers (transition words)
+    cohesion_markers = [token.text.lower() for token in doc if token.dep_ in ["mark", "advmod"]]
+    cohesion_score = len(cohesion_markers) / sentence_count if sentence_count > 0 else 0
 
-    # Sentence complexity (average words per sentence)
-    avg_sentence_length = word_count / sentence_count if sentence_count > 0 else 0
+    # Lexical repetition (overused words)
+    common_words = Counter([token.text.lower() for token in doc if token.is_alpha]).most_common(5)
 
-    # OpenAI GPT relevance check
+    # Sentence complexity (complex sentence ratio)
+    complex_sentences = sum(1 for token in doc if token.dep_ in ["csubj", "xcomp", "advcl"])
+    complexity_score = complex_sentences / sentence_count if sentence_count > 0 else 0
+
+    # GPT-4 Evaluation with Band Descriptors
     messages = [
-        {"role": "system", "content": "You are an IELTS examiner. Assess the given essay based on the IELTS criteria."},
-        {"role": "user", "content": f"Prompt: {prompt}\nEssay: {text}\n\nGive band scores for Task Achievement, Coherence, Lexical Resource, Grammar, and an Overall Band Score. Then provide detailed feedback on how to improve."}
+        {"role": "system", "content": f"You are an IELTS examiner. Use the following IELTS Band Descriptors for grading:\n\n{IELTS_BAND_DESCRIPTORS}"},
+        {"role": "user", "content": f"Prompt: {prompt}\n\nEssay: {text}\n\nBased on the IELTS criteria, provide:\n1. Scores for Task Achievement, Coherence, Lexical Resource, Grammar, and an Overall Band Score.\n2. Justification for each score.\n3. Suggestions for improvement."}
     ]
-
+    
     response = client.chat.completions.create(
         model="gpt-4",
         messages=messages
@@ -125,7 +170,7 @@ def analyze_essay(text, prompt):
 
     feedback_text = response.choices[0].message.content
 
-    # Extracting scores from feedback using regex
+    # Extracting scores using regex
     scores = {
         "Task Achievement": None,
         "Coherence": None,
@@ -151,14 +196,15 @@ def analyze_essay(text, prompt):
         "word_count": word_count,
         "sentence_count": sentence_count,
         "lexical_diversity": round(lexical_diversity, 2),
-        "grammar_errors": grammar_errors,
-        "avg_sentence_length": round(avg_sentence_length, 2),
+        "cohesion_score": round(cohesion_score, 2),
+        "common_words": common_words,
+        "complex_sentence_ratio": round(complexity_score, 2),
         "Task Achievement": scores["Task Achievement"],
         "Coherence": scores["Coherence"],
         "Lexical Resource": scores["Lexical Resource"],
         "Grammar": scores["Grammar"],
         "Overall Band Score": scores["Overall Band Score"],
-        "feedback": feedback_text  # Full feedback from OpenAI
+        "feedback": feedback_text
     }
 
 def check_grammar(text):
