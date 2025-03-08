@@ -183,7 +183,7 @@ def analyze_essay(text, prompt):
         "Task Achievement": r"Task Achievement.*?(\d(?:\.\d)?)",
         "Coherence": r"Coherence.*?(\d(?:\.\d)?)",
         "Lexical Resource": r"Lexical Resource.*?(\d(?:\.\d)?)",
-        "Grammar": r"(?:Grammar|Grammatical Range and Accuracy).*?(\d(?:\.\d)?)",
+        "Grammar": r"(?:Grammar|Grammatical Range & Accuracy).*?(\d(?:\.\d)?)",
         "Overall Band Score": r"Overall Band Score.*?(\d(?:\.\d)?)"
     }
 
