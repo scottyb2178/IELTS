@@ -133,7 +133,7 @@ def extract_text_from_file(uploaded_file):
     return None
 
 def analyze_essay(text, prompt):
-    """Performs NLP analysis and evaluates relevance to the question using OpenAI GPT."""
+    """Compares NLP evaluation from both general GPT-4 and fine-tuned GPT-4o and prints debug info."""
     doc = nlp(text)
 
     # Word count
@@ -157,10 +157,10 @@ def analyze_essay(text, prompt):
     complex_sentences = sum(1 for token in doc if token.dep_ in ["csubj", "xcomp", "advcl"])
     complexity_score = complex_sentences / sentence_count if sentence_count > 0 else 0
 
-    # GPT-4 Evaluation with Band Descriptors
+    # Create messages for evaluation
     messages = [
-    {"role": "system", "content": f"You are an IELTS examiner. Use the following IELTS Band Descriptors for grading:\n\n{IELTS_BAND_DESCRIPTORS}"},
-    {"role": "user", "content": f"""Prompt: {prompt}\n\nEssay: {text}\n\n
+        {"role": "system", "content": f"You are an IELTS examiner. Use the following IELTS Band Descriptors for grading:\n\n{IELTS_BAND_DESCRIPTORS}"},
+        {"role": "user", "content": f"""Prompt: {prompt}\n\nEssay: {text}\n\n
 Based on the IELTS criteria, provide the following response with this strict format:
 ---
 Task Achievement: [Score: Band X.X]
@@ -172,40 +172,59 @@ Overall Band Score: [Score: Band X.X]
 Justification:
 [List reasons for each score]
 ---
-Suggestions for Improved Score"
-[List suggestions to improve their score]
 Your output MUST follow this exact format. Do NOT change the structure. Do NOT add extra sections. Only use the format provided."""}
-]
-    
-    response = client.chat.completions.create(
-        model="ft:gpt-4o-2024-08-06:personal::B8gProGu",
-        messages=messages
-    )
+    ]
 
-    feedback_text = response.choices[0].message.content
+    try:
+        # Call GPT-4-Turbo (General Model)
+        response_general = client.chat.completions.create(
+            model="gpt-4-turbo",
+            messages=messages
+        )
+        feedback_general = response_general.choices[0].message.content
+    except Exception as e:
+        feedback_general = f"Error: {e}"
 
-    # Extracting scores using regex
-    scores = {
-        "Task Achievement": None,
-        "Coherence": None,
-        "Lexical Resource": None,
-        "Grammar": None,
-        "Overall Band Score": None
-    }
+    try:
+        # Call Fine-Tuned Model
+        response_finetuned = client.chat.completions.create(
+            model=fine_tuned_model,
+            messages=messages
+        )
+        feedback_finetuned = response_finetuned.choices[0].message.content
+    except Exception as e:
+        feedback_finetuned = f"Error: {e}"
 
-    patterns = {
-        "Task Achievement": r"Task Achievement\s*\nScore:\s*Band (\d(?:\.\d)?)",
-        "Coherence": r"Coherence\s*\nScore:\s*Band (\d(?:\.\d)?)",
-        "Lexical Resource": r"Lexical Resource\s*\(Vocabulary\)\s*\nScore:\s*Band (\d(?:\.\d)?)",
-        "Grammar": r"Grammatical Range & Accuracy\s*\nScore:\s*Band (\d(?:\.\d)?)",
-        "Overall Band Score": r"Overall Band Score\s*\nScore:\s*Band (\d(?:\.\d)?)"
-    }
+    # Debugging: Print raw responses
+    print("\n===== DEBUG: General GPT-4-Turbo Response =====\n", feedback_general)
+    print("\n===== DEBUG: Fine-Tuned GPT-4o Response =====\n", feedback_finetuned)
 
-    scores = {key: "Not Provided" for key in patterns}  # Default if extraction fails
-    for category, pattern in patterns.items():
-        match = re.search(pattern, feedback_text, re.IGNORECASE)
-        if match:
-            scores[category] = float(match.group(1))  # Convert to float
+    # Extract scores using regex
+    def extract_scores(feedback_text):
+        patterns = {
+            "Task Achievement": r"Task Achievement.*?\[Score:\s*Band\s*(\d(?:\.\d)?)\]",
+            "Coherence": r"Coherence.*?\[Score:\s*Band\s*(\d(?:\.\d)?)\]",
+            "Lexical Resource": r"Lexical Resource.*?\[Score:\s*Band\s*(\d(?:\.\d)?)\]",
+            "Grammar": r"Grammar.*?\[Score:\s*Band\s*(\d(?:\.\d)?)\]",
+            "Overall Band Score": r"Overall Band Score.*?\[Score:\s*Band\s*(\d(?:\.\d)?)\]"
+        }
+
+        scores = {key: "Not Provided" for key in patterns}  # Default if extraction fails
+        for category, pattern in patterns.items():
+            match = re.search(pattern, feedback_text, re.IGNORECASE | re.DOTALL)
+            if match:
+                scores[category] = float(match.group(1))
+            else:
+                print(f"⚠️ DEBUG: Could not extract {category} from response.")  # Debugging output
+
+        return scores
+
+    scores_general = extract_scores(feedback_general)
+    scores_finetuned = extract_scores(feedback_finetuned)
+
+    # Debugging: Print extracted scores
+    print("\n===== DEBUG: Extracted Scores (General GPT-4-Turbo) =====\n", scores_general)
+    print("\n===== DEBUG: Extracted Scores (Fine-Tuned GPT-4o) =====\n", scores_finetuned)
 
     return {
         "word_count": word_count,
@@ -214,12 +233,14 @@ Your output MUST follow this exact format. Do NOT change the structure. Do NOT a
         "cohesion_score": round(cohesion_score, 2),
         "common_words": common_words,
         "complex_sentence_ratio": round(complexity_score, 2),
-        "Task Achievement": scores["Task Achievement"],
-        "Coherence": scores["Coherence"],
-        "Lexical Resource": scores["Lexical Resource"],
-        "Grammar": scores["Grammar"],
-        "Overall Band Score": scores["Overall Band Score"],
-        "feedback": feedback_text
+
+        # General Model (GPT-4-Turbo)
+        "General GPT Scores": scores_general,
+        "General GPT Feedback": feedback_general,
+
+        # Fine-Tuned Model
+        "Fine-Tuned GPT Scores": scores_finetuned,
+        "Fine-Tuned GPT Feedback": feedback_finetuned
     }
 
 def check_grammar(text):
