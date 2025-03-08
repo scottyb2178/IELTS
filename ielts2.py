@@ -180,17 +180,18 @@ def analyze_essay(text, prompt):
     }
 
     patterns = {
-        "Task Achievement": r"Task Achievement.*?(\d(?:\.\d)?)",
-        "Coherence": r"Coherence.*?(\d(?:\.\d)?)",
-        "Lexical Resource": r"Lexical Resource.*?(\d(?:\.\d)?)",
-        "Grammar": r"(?:Grammar|Grammatical Range & Accuracy).*?(\d(?:\.\d)?)",
-        "Overall Band Score": r"Overall Band Score.*?(\d(?:\.\d)?)"
+        "Task Achievement": r"Task Achievement\s*\nScore:\s*Band (\d(?:\.\d)?)",
+        "Coherence": r"Coherence\s*\nScore:\s*Band (\d(?:\.\d)?)",
+        "Lexical Resource": r"Lexical Resource\s*\(Vocabulary\)\s*\nScore:\s*Band (\d(?:\.\d)?)",
+        "Grammar": r"Grammatical Range & Accuracy\s*\nScore:\s*Band (\d(?:\.\d)?)",
+        "Overall Band Score": r"Overall Band Score\s*\nScore:\s*Band (\d(?:\.\d)?)"
     }
 
+    scores = {key: "Not Provided" for key in patterns}  # Default if extraction fails
     for category, pattern in patterns.items():
         match = re.search(pattern, feedback_text, re.IGNORECASE)
         if match:
-            scores[category] = float(match.group(1))
+            scores[category] = float(match.group(1))  # Convert to float
 
     return {
         "word_count": word_count,
