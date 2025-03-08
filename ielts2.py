@@ -222,6 +222,9 @@ st.title("IELTS Writing Test")
 if st.button("Generate IELTS Question"):
     ielts_question = generate_ielts_question()
     st.session_state['ielts_question'] = ielts_question
+    # Clear previous input fields
+    st.session_state['user_input'] = ""
+    st.session_state['uploaded_file'] = None
 
 if 'ielts_question' in st.session_state:
     st.subheader("Your IELTS Question:")
@@ -229,63 +232,23 @@ if 'ielts_question' in st.session_state:
     
     # Input options
     user_input = st.text_area("Type your response:", height=300, key="user_input")
-    uploaded_file = st.file_uploader("Or upload a file (PDF, DOCX, TXT)", type=["pdf", "txt", "docx"])
-
-    # Live word count and spell/grammar check
-    # Live word count and spell/grammar check
-    if user_input:
-        words = user_input.split()
-        word_count = len(user_input.split())
-        st.write(f"**Word Count:** {word_count}")
-
-        # Spell checking with TextBlob (Fixed)
-        #blob = TextBlob(user_input)
-        #spelling_suggestions = []
-        #for word in blob.words:
-        #    if word.spellcheck()[0][1] < 1:  # If confidence is low, suggest correction
-        #        spelling_suggestions.append(word.correct())
-
-        # Grammar checking using the API
-        #grammar_corrections = check_grammar(user_input)
-        #
-        #if spelling_suggestions:
-        #    st.write("### Spelling Suggestions:")
-        #    st.write(", ".join(spelling_suggestions))
-
-        #if grammar_corrections:
-        #    st.write("### Grammar Issues:")
-        #    for correction in grammar_corrections:
-        #        st.write(f"**{correction['context']}** → {correction['replacements']}")
+    uploaded_file = st.file_uploader("Or upload a file (PDF, DOCX, TXT)", type=["pdf", "txt", "docx"], key="uploaded_file")
 
     if st.button("Submit Response"):
-        essay_text = user_input if user_input.strip() else None
-        if uploaded_file is not None:
+        essay_text = user_input.strip() if user_input else None
+        if uploaded_file:
             essay_text = extract_text_from_file(uploaded_file)
-        
-        if essay_text:
-            result = analyze_essay(essay_text, st.session_state['ielts_question'])
-    
-            st.subheader("Assessment Result:")
-            st.write(f"**Word Count:** {result['word_count']}")
-            st.write(f"**Sentence Count:** {result['sentence_count']}")
-            st.write(f"**Lexical Diversity:** {result['lexical_diversity']}")
-            st.write(f"**Grammar Errors:** {result['grammar_errors']}")
-            st.write(f"**Average Sentence Length:** {result['avg_sentence_length']} words")
-        
-            # Display individual band scores
-            st.subheader("Band Scores:")
-            st.write(f"**Task Achievement:** {result['Task Achievement']}")
-            st.write(f"**Coherence:** {result['Coherence']}")
-            st.write(f"**Lexical Resource:** {result['Lexical Resource']}")
-            st.write(f"**Grammar:** {result['Grammar']}")
-            st.write(f"**Overall Band Score:** {result['Overall Band Score']}")
 
-            # Display detailed feedback
-            st.subheader("Feedback & Improvements:")
-            st.write(result["feedback"])  # Full feedback from GPT
-    
-    else:
-        st.warning("No valid response provided. Please type your response or upload a file.")
+        if essay_text:
+            with st.spinner("Analyzing your response... Please wait."):
+                time.sleep(2)  # Simulate loading time
+                feedback = analyze_essay(essay_text, st.session_state['ielts_question'])
+
+            st.subheader("Assessment Result:")
+            st.write(feedback)  # Display GPT-4 feedback
+
+        else:
+            st.warning("No valid response provided. Please type your response or upload a file.")
 
 if __name__ == "__main__":
     # Start your app (Streamlit or another framework)
