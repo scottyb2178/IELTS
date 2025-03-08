@@ -241,7 +241,7 @@ if 'ielts_question' in st.session_state:
 
         if essay_text:
             with st.spinner("Analyzing your response... Please wait."):
-                time.sleep(2)  # Simulate loading time
+                #time.sleep(2)  # Simulate loading time
                 feedback = analyze_essay(essay_text, st.session_state['ielts_question'])
 
             st.subheader("Assessment Result:")
