@@ -223,8 +223,11 @@ if st.button("Generate IELTS Question"):
     ielts_question = generate_ielts_question()
     st.session_state['ielts_question'] = ielts_question
     # Clear previous input fields
-    st.session_state['user_input'] = ""
-    st.session_state['uploaded_file'] = None
+    if 'user_input' in st.session_state:
+        del st.session_state['user_input']  # Correct way to clear text box
+    
+    if 'uploaded_file' in st.session_state:
+        del st.session_state['uploaded_file'] 
 
 if 'ielts_question' in st.session_state:
     st.subheader("Your IELTS Question:")
