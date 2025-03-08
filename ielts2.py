@@ -234,21 +234,44 @@ if 'ielts_question' in st.session_state:
     user_input = st.text_area("Type your response:", height=300, key="user_input")
     uploaded_file = st.file_uploader("Or upload a file (PDF, DOCX, TXT)", type=["pdf", "txt", "docx"], key="uploaded_file")
 
-    if st.button("Submit Response"):
-        essay_text = user_input.strip() if user_input else None
-        if uploaded_file:
-            essay_text = extract_text_from_file(uploaded_file)
+if st.button("Submit Response"):
+    essay_text = user_input.strip() if user_input else None
+    if uploaded_file:
+        essay_text = extract_text_from_file(uploaded_file)
 
-        if essay_text:
-            with st.spinner("Analyzing your response... Please wait."):
-                #time.sleep(2)  # Simulate loading time
-                feedback = analyze_essay(essay_text, st.session_state['ielts_question'])
+    if essay_text:
+        with st.spinner("Analyzing your response... Please wait."):
+            feedback = analyze_essay(essay_text, st.session_state['ielts_question'])
 
-            st.subheader("Assessment Result:")
-            st.write(feedback)  # Display GPT-4 feedback
+        # Display analysis results
+        st.subheader("Assessment Result:")
+        st.write(f"**Word Count:** {feedback['word_count']}")
+        st.write(f"**Sentence Count:** {feedback['sentence_count']}")
+        st.write(f"**Lexical Diversity:** {feedback['lexical_diversity']:.2f}")
+        st.write(f"**Cohesion Score:** {feedback['cohesion_score']:.2f}")
+        st.write(f"**Complex Sentence Ratio:** {feedback['complex_sentence_ratio']:.2f}")
 
-        else:
-            st.warning("No valid response provided. Please type your response or upload a file.")
+        # Format and display common words as a table
+        import pandas as pd
+        common_words_df = pd.DataFrame(feedback["common_words"], columns=["Word", "Count"])
+        st.write("### Most Common Words")
+        st.table(common_words_df)
+
+        # Display band scores
+        st.subheader("Band Scores:")
+        st.write(f"**Task Achievement:** {feedback['Task Achievement']}")
+        st.write(f"**Coherence:** {feedback['Coherence']}")
+        st.write(f"**Lexical Resource:** {feedback['Lexical Resource']}")
+        st.write(f"**Grammar:** {feedback['Grammar']}")
+        st.write(f"**Overall Band Score:** {feedback['Overall Band Score']}")
+
+        # Display detailed feedback
+        st.subheader("Feedback & Improvements:")
+        st.write(feedback["feedback"])  # Full GPT-4 generated feedback
+
+    else:
+        st.warning("No valid response provided. Please type your response or upload a file.")
+
 
 if __name__ == "__main__":
     # Start your app (Streamlit or another framework)
