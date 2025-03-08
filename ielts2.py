@@ -159,9 +159,23 @@ def analyze_essay(text, prompt):
 
     # GPT-4 Evaluation with Band Descriptors
     messages = [
-        {"role": "system", "content": f"You are an IELTS examiner. Use the following IELTS Band Descriptors for grading:\n\n{IELTS_BAND_DESCRIPTORS}"},
-        {"role": "user", "content": f"Prompt: {prompt}\n\nEssay: {text}\n\nBased on the IELTS criteria, provide:\n1. Scores for Task Achievement, Coherence, Lexical Resource, Grammar, and an Overall Band Score.\n2. Justification for each score.\n3. Suggestions for improvement."}
-    ]
+    {"role": "system", "content": f"You are an IELTS examiner. Use the following IELTS Band Descriptors for grading:\n\n{IELTS_BAND_DESCRIPTORS}"},
+    {"role": "user", "content": f"""Prompt: {prompt}\n\nEssay: {text}\n\n
+Based on the IELTS criteria, provide the following response with this strict format:
+---
+Task Achievement: [Score: Band X.X]
+Coherence: [Score: Band X.X]
+Lexical Resource: [Score: Band X.X]
+Grammar: [Score: Band X.X]
+Overall Band Score: [Score: Band X.X]
+---
+Justification:
+[List reasons for each score]
+---
+Suggestions for Improved Score"
+[List suggestions to improve their score]
+Your output MUST follow this exact format. Do NOT change the structure. Do NOT add extra sections. Only use the format provided."""}
+]
     
     response = client.chat.completions.create(
         model="ft:gpt-4o-2024-08-06:personal::B8gProGu",
