@@ -132,10 +132,8 @@ def extract_text_from_file(uploaded_file):
         return "\n".join([para.text for para in doc.paragraphs])
     return None
 
-fine_tuned_model="ft:gpt-4o-2024-08-06:personal::B8gProGu"
-
 def analyze_essay(text, prompt):
-    """Compares NLP evaluation from both general GPT-4 and fine-tuned GPT-4o."""
+    """Performs NLP analysis and evaluates relevance to the question using OpenAI GPT."""
     doc = nlp(text)
 
     # Word count
@@ -159,59 +157,40 @@ def analyze_essay(text, prompt):
     complex_sentences = sum(1 for token in doc if token.dep_ in ["csubj", "xcomp", "advcl"])
     complexity_score = complex_sentences / sentence_count if sentence_count > 0 else 0
 
-    # Create messages for evaluation
+    # GPT-4 Evaluation with Band Descriptors
     messages = [
         {"role": "system", "content": f"You are an IELTS examiner. Use the following IELTS Band Descriptors for grading:\n\n{IELTS_BAND_DESCRIPTORS}"},
-        {"role": "user", "content": f"Prompt: {prompt}\n\nEssay: {text}\n\nBased on the IELTS criteria, provide:\n1. Scores for Task Achievement, Coherence, Lexical Resource, Grammar, and an Overall Band Score.\n2. Justification for each score.\n3. Suggestions for improvement.\n\nYour response format should strictly follow this structure:\nTask Achievement: [Score]\nCoherence: [Score]\nLexical Resource: [Score]\nGrammar: [Score]\nOverall Band Score: [Score]\n\nFeedback:\n[Your detailed assessment]."}
+        {"role": "user", "content": f"Prompt: {prompt}\n\nEssay: {text}\n\nBased on the IELTS criteria, provide:\n1. Scores for Task Achievement, Coherence, Lexical Resource, Grammar, and an Overall Band Score.\n2. Justification for each score.\n3. Suggestions for improvement."}
     ]
+    
+    response = client.chat.completions.create(
+        model="gpt-4",
+        messages=messages
+    )
 
-    try:
-        # Call GPT-4-Turbo (General Model)
-        response_general = client.chat.completions.create(
-            model="gpt-4-turbo",
-            messages=messages
-        )
-        feedback_general = response_general.choices[0].message.content
-    except Exception as e:
-        feedback_general = f"Error: {e}"
+    feedback_text = response.choices[0].message.content
 
-    try:
-        # Call Fine-Tuned Model
-        response_finetuned = client.chat.completions.create(
-            model=fine_tuned_model,
-            messages=messages
-        )
-        feedback_finetuned = response_finetuned.choices[0].message.content
-    except Exception as e:
-        feedback_finetuned = f"Error: {e}"
+    # Extracting scores using regex
+    scores = {
+        "Task Achievement": None,
+        "Coherence": None,
+        "Lexical Resource": None,
+        "Grammar": None,
+        "Overall Band Score": None
+    }
 
-    # Debugging: Print raw responses
-    print("\n===== General GPT Response =====\n", feedback_general)
-    print("\n===== Fine-Tuned GPT Response =====\n", feedback_finetuned)
+    patterns = {
+        "Task Achievement": r"Task Achievement.*?(\d(?:\.\d)?)",
+        "Coherence": r"Coherence.*?(\d(?:\.\d)?)",
+        "Lexical Resource": r"Lexical Resource.*?(\d(?:\.\d)?)",
+        "Grammar": r"(?:Grammar|Grammatical Range & Accuracy).*?(\d(?:\.\d)?)",
+        "Overall Band Score": r"Overall Band Score.*?(\d(?:\.\d)?)"
+    }
 
-    # Extract scores using regex
-    def extract_scores(feedback_text):
-        patterns = {
-            "Task Achievement": r"Task Achievement.*?(\d(?:\.\d)?)",
-            "Coherence": r"Coherence.*?(\d(?:\.\d)?)",
-            "Lexical Resource": r"Lexical Resource.*?(\d(?:\.\d)?)",
-            "Grammar": r"(?:Grammar|Grammatical Range & Accuracy).*?(\d(?:\.\d)?)",
-            "Overall Band Score": r"Overall Band Score.*?(\d(?:\.\d)?)"
-        }
-
-        scores = {key: "Not Provided" for key in patterns}  # Default value if extraction fails
-        for category, pattern in patterns.items():
-            match = re.search(pattern, feedback_text, re.IGNORECASE)
-            if match:
-                scores[category] = float(match.group(1))
-        return scores
-
-    scores_general = extract_scores(feedback_general)
-    scores_finetuned = extract_scores(feedback_finetuned)
-
-    # Debugging: Print extracted scores
-    print("\n===== Extracted Scores (General GPT) =====\n", scores_general)
-    print("\n===== Extracted Scores (Fine-Tuned GPT) =====\n", scores_finetuned)
+    for category, pattern in patterns.items():
+        match = re.search(pattern, feedback_text, re.IGNORECASE)
+        if match:
+            scores[category] = float(match.group(1))
 
     return {
         "word_count": word_count,
@@ -220,14 +199,12 @@ def analyze_essay(text, prompt):
         "cohesion_score": round(cohesion_score, 2),
         "common_words": common_words,
         "complex_sentence_ratio": round(complexity_score, 2),
-
-        # General Model (GPT-4-Turbo)
-        "General GPT Scores": scores_general,
-        "General GPT Feedback": feedback_general,
-
-        # Fine-Tuned Model
-        "Fine-Tuned GPT Scores": scores_finetuned,
-        "Fine-Tuned GPT Feedback": feedback_finetuned
+        "Task Achievement": scores["Task Achievement"],
+        "Coherence": scores["Coherence"],
+        "Lexical Resource": scores["Lexical Resource"],
+        "Grammar": scores["Grammar"],
+        "Overall Band Score": scores["Overall Band Score"],
+        "feedback": feedback_text
     }
 
 def check_grammar(text):
